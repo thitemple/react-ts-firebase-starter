@@ -1,10 +1,8 @@
 import React, { ReactElement } from "react";
 import { Link } from "react-router-dom";
 import { Card, Container } from "react-bulma-components";
-import { getAuth } from "firebase/auth";
 
-import app from "../config/firebase";
-const auth = getAuth(app);
+import { auth } from "config/firebase";
 
 export default function HomePage(): ReactElement {
   return (

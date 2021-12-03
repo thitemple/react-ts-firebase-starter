@@ -1,13 +1,12 @@
 import React, { ReactElement, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Form, Icon, Button } from "react-bulma-components";
 
-import app from "../../config/firebase";
-import logging from "../../config/logging";
-import AuthContainer from "../../components/ui/AuthContainer";
-import ErrorText from "../../components/ui/ErrorText/ErrorText";
-const auth = getAuth(app);
+import { auth } from "config/firebase";
+import logging from "config/logging";
+import AuthContainer from "components/ui/AuthContainer";
+import ErrorText from "components/ui/ErrorText/ErrorText";
 
 export default function RegisterPage(): ReactElement {
   const [registering, setRegistering] = useState(false);

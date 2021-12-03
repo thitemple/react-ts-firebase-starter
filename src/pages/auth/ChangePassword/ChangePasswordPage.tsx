@@ -1,13 +1,12 @@
 import React, { ReactElement, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getAuth, updatePassword } from "firebase/auth";
+import { updatePassword } from "firebase/auth";
 import { Form, Icon, Button } from "react-bulma-components";
 
-import app from "../../config/firebase";
-import logging from "../../config/logging";
-import AuthContainer from "../../components/ui/AuthContainer";
-import ErrorText from "../../components/ui/ErrorText/ErrorText";
-const auth = getAuth(app);
+import { auth } from "config/firebase";
+import logging from "config/logging";
+import AuthContainer from "components/ui/AuthContainer";
+import ErrorText from "components/ui/ErrorText/ErrorText";
 
 export default function ChangePasswordPage(): ReactElement | null {
   const [changing, setChanging] = useState(false);

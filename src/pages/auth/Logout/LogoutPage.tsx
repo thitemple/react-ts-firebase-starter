@@ -1,12 +1,11 @@
 import React, { ReactElement } from "react";
 import { Button } from "react-bulma-components";
 import { useNavigate } from "react-router-dom";
-import { getAuth, signOut } from "firebase/auth";
+import { signOut } from "firebase/auth";
 
-import AuthContainer from "../../components/ui/AuthContainer";
-import app from "../../config/firebase";
-import logging from "../../config/logging";
-const auth = getAuth(app);
+import AuthContainer from "components/ui/AuthContainer";
+import { auth } from "config/firebase";
+import logging from "config/logging";
 
 export default function LogoutPage(): ReactElement {
   const navigate = useNavigate();

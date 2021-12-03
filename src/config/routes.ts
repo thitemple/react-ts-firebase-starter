@@ -2,10 +2,10 @@ import { Route } from "../types/route";
 import HomePage from "../pages/Home";
 import RegisterPage from "../pages/auth/Register";
 import LoginPage from "../pages/auth/Login";
-import ChangePasswordPage from "../pages/auth/Change";
-import LogoutPage from "../pages/auth/Logout";
-import ForgotPasswordPage from "../pages/auth/Forgot";
-import ResetPasswordPage from "../pages/auth/Reset";
+import ChangePasswordPage from "../pages/auth/ChangePassword";
+import LogoutPage from "../pages/auth/Logout/LogoutPage";
+import ForgotPasswordPage from "../pages/auth/ForgotPassword";
+import ResetPasswordPage from "../pages/auth/ResetPassword";
 
 const routes: Route[] = [
   {

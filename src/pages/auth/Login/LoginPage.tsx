@@ -1,18 +1,13 @@
 import React, { ReactElement, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  getAuth,
-  signInWithEmailAndPassword,
-  AuthProvider,
-} from "firebase/auth";
+import { signInWithEmailAndPassword, AuthProvider } from "firebase/auth";
 import { Form, Icon, Button } from "react-bulma-components";
 
-import app, { Providers } from "../../config/firebase";
-import logging from "../../config/logging";
-import AuthContainer from "../../components/ui/AuthContainer";
-import ErrorText from "../../components/ui/ErrorText/ErrorText";
-import { SignInWithSocialMedia } from "./modules";
-const auth = getAuth(app);
+import { auth, Providers } from "config/firebase";
+import logging from "config/logging";
+import AuthContainer from "components/ui/AuthContainer";
+import ErrorText from "components/ui/ErrorText/ErrorText";
+import { SignInWithSocialMedia } from "../modules";
 
 export default function LoginPage(): ReactElement {
   const [authenticating, setAuthenticating] = useState(false);

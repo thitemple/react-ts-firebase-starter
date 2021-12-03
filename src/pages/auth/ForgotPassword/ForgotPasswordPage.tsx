@@ -2,10 +2,10 @@ import React, { ReactElement, useState } from "react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { Form, Icon, Button } from "react-bulma-components";
 
-import { auth } from "../../config/firebase";
-import logging from "../../config/logging";
-import AuthContainer from "../../components/ui/AuthContainer";
-import ErrorText from "../../components/ui/ErrorText/ErrorText";
+import { auth } from "config/firebase";
+import logging from "config/logging";
+import AuthContainer from "components/ui/AuthContainer";
+import ErrorText from "components/ui/ErrorText/ErrorText";
 
 export default function ForgotPasswordPage(): ReactElement | null {
   const [sending, setSending] = useState(false);
