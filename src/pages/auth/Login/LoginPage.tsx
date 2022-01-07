@@ -1,56 +1,18 @@
 import React, { ReactElement, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { signInWithEmailAndPassword, AuthProvider } from "firebase/auth";
 import { Form, Icon, Button } from "react-bulma-components";
+import { useMachine } from "@xstate/react";
 
-import { auth, Providers } from "config/firebase";
-import logging from "config/logging";
+import { Providers } from "config/firebase";
 import AuthContainer from "components/ui/AuthContainer";
 import ErrorText from "components/ui/ErrorText/ErrorText";
-import { SignInWithSocialMedia } from "../modules";
+import loginPageMachine from "./state";
 
 export default function LoginPage(): ReactElement {
-  const [authenticating, setAuthenticating] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [current, send] = useMachine(loginPageMachine);
   const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  const signIn = (): void => {
-    if (error !== "") {
-      setError("");
-    }
-
-    setAuthenticating(true);
-    signInWithEmailAndPassword(auth, email, password)
-      .then((result) => {
-        logging.info(result);
-        navigate("/");
-      })
-      .catch((error) => {
-        logging.error(error);
-        setAuthenticating(false);
-        setError("Unable to sign in. Please try again later");
-      });
-  };
-
-  const signInWithSocialMedia = (provider: AuthProvider): void => {
-    if (error !== "") {
-      setError("");
-    }
-
-    setAuthenticating(true);
-    SignInWithSocialMedia(provider)
-      .then((result) => {
-        logging.info(result);
-        navigate("/");
-      })
-      .catch((error: { message: string }) => {
-        logging.error(error);
-        setAuthenticating(false);
-        setError(error.message);
-      });
-  };
+  const { email, password } = current.context;
 
   return (
     <AuthContainer header="Log in">
@@ -64,7 +26,9 @@ export default function LoginPage(): ReactElement {
             id="email"
             placeholder="Your e-mail"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) =>
+              send({ type: "EMAIL_CHANGED", email: e.target.value })
+            }
           />
           <Icon align="left" size="small">
             <i className="fas fa-envelope" />
@@ -82,7 +46,9 @@ export default function LoginPage(): ReactElement {
             id="password"
             placeholder="Your password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) =>
+              send({ type: "PASSWORD_CHANGED", password: e.target.value })
+            }
           />
           <Icon align="left" size="small">
             <i className="fas fa-key" />
@@ -95,8 +61,8 @@ export default function LoginPage(): ReactElement {
             className="is-large"
             color="primary"
             type="submit"
-            disabled={authenticating}
-            onClick={() => signIn()}
+            disabled={current.matches("authenticating")}
+            onClick={() => send({ type: "FORM_SUBMITTED" })}
           >
             Login
           </Button>
@@ -113,7 +79,7 @@ export default function LoginPage(): ReactElement {
       <ErrorText error={error} />
       <hr />
       <Button
-        disabled={authenticating}
+        disabled={current.matches("authenticating")}
         onClick={() => signInWithSocialMedia(Providers.google)}
         style={{
           backgroundColor: "#ea4335",
