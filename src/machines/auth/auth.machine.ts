@@ -1,29 +1,9 @@
 import { createMachine } from "xstate";
-import { onAuthStateChanged } from "firebase/auth";
 
-import { auth } from "../config/firebase";
+import { AuthContext, AuthEvents } from "./auth.types";
+import { watchAuthState } from "./auth.services";
 
-type Context = unknown;
-
-type Events = { type: "SIGN_IN" } | { type: "SIGN_OUT" };
-
-function watchAuthState() {
-  return (callback: (eventType: Events["type"]) => void) => {
-    onAuthStateChanged(auth, (user) => {
-      if (user !== null) {
-        callback("SIGN_IN");
-      } else {
-        callback("SIGN_OUT");
-      }
-    });
-
-    return () => {
-      console.debug("exiting");
-    };
-  };
-}
-
-export const authMachine = createMachine<Context, Events>(
+export default createMachine<AuthContext, AuthEvents>(
   {
     id: "auth",
     initial: "loading",
