@@ -2,13 +2,13 @@ import React, { ReactElement } from "react";
 import { Notification } from "react-bulma-components";
 
 export type ErrorTextProps = {
-  error: string;
+  error?: string;
 };
 
 export default function ErrorText(props: ErrorTextProps): ReactElement | null {
   const { error } = props;
 
-  if (error === "") {
+  if (error == undefined || error === "") {
     return null;
   }
 

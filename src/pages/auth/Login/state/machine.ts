@@ -1,35 +1,9 @@
-import { createMachine, assign } from "xstate";
-import { AuthError } from "firebase/auth";
+import { createMachine } from "xstate";
 
-import { signInWithEmailAndPassword } from "./actions";
-
-type LoginPageEvent =
-  | { type: "AUTH_ERROR"; data: AuthError }
-  | { type: "EMAIL_CHANGED"; email: string }
-  | { type: "PASSWORD_CHANGED"; password: string }
-  | { type: "SUBMIT" };
-
-export type LoginPageContext = {
-  email: string;
-  password: string;
-  errors: string[];
-  serverError: string;
-};
-
-type LoginPageTypeState =
-  | {
-      value: "editing";
-      context: LoginPageContext & { errors: [] };
-    }
-  | { value: "failed"; context: LoginPageContext; error: string }
-  | {
-      value: "success";
-      context: LoginPageContext & { errors: []; serverError: "" };
-    };
-
-function isEmailInvalid(ctx: LoginPageContext): boolean {
-  return ctx.email.length > 0;
-}
+import { LoginPageContext, LoginPageEvent, LoginPageTypeState } from "./types";
+import { updateEmail, updatePassword, updateError } from "./actions";
+import { signInWithEmailAndPassword, signInWithSocialMedia } from "./services";
+import { isEmailEmpty, isEmailInvalid, isPasswordEmpty } from "./guards";
 
 export default createMachine<
   LoginPageContext,
@@ -39,24 +13,74 @@ export default createMachine<
   {
     id: "loginPage",
     initial: "editing",
-    context: { email: "", password: "", errors: [], serverError: "" },
+    context: { email: "", password: "" },
     states: {
       editing: {
         on: {
           SUBMIT: [
             {
-              target: "editing",
+              target: "editing.email.error.empty",
+              cond: isEmailEmpty.name,
+            },
+            {
+              target: "editing.email.error.invalid",
               cond: isEmailInvalid.name,
+            },
+            {
+              target: "editing.password.error.empty",
+              cond: isPasswordEmpty.name,
             },
             {
               target: "submitting",
             },
           ],
           EMAIL_CHANGED: {
-            actions: assign({ email: (_, { email }) => email }),
+            actions: updateEmail.name,
           },
           PASSWORD_CHANGED: {
-            actions: assign({ password: (_, { password }) => password }),
+            actions: updatePassword.name,
+          },
+          SIGN_IN_WITH_SOCIAL_MEDIA: "signingInWithSocialMedia",
+        },
+        type: "parallel",
+        states: {
+          email: {
+            initial: "valid",
+            states: {
+              valid: {},
+              error: {
+                initial: "empty",
+                states: {
+                  empty: {},
+                  invalid: {},
+                },
+              },
+            },
+          },
+          password: {
+            initial: "valid",
+            states: {
+              valid: {},
+              error: {
+                initial: "empty",
+                states: {
+                  empty: {},
+                },
+              },
+            },
+          },
+        },
+      },
+      signingInWithSocialMedia: {
+        invoke: {
+          src: signInWithSocialMedia.name,
+          onError: {
+            target: "failed",
+            actions: updateError.name,
+          },
+          onDone: {
+            target: "success",
+            actions: ["navigateToHome"],
           },
         },
       },
@@ -65,10 +89,10 @@ export default createMachine<
           src: signInWithEmailAndPassword.name,
           onError: {
             target: "failed",
-            actions: ["updateError"],
+            actions: updateError.name,
           },
           onDone: {
-            target: "authenticated",
+            target: "success",
             actions: ["navigateToHome"],
           },
         },
@@ -79,10 +103,10 @@ export default createMachine<
       failed: {
         on: {
           EMAIL_CHANGED: {
-            actions: assign({ email: (_, { email }) => email }),
+            actions: updateEmail.name,
           },
           PASSWORD_CHANGED: {
-            actions: assign({ password: (_, { password }) => password }),
+            actions: updatePassword.name,
           },
         },
       },
@@ -91,20 +115,17 @@ export default createMachine<
   {
     services: {
       signInWithEmailAndPassword,
+      signInWithSocialMedia,
     },
     actions: {
-      updateError: (_ctx, evt) => {
-        if (evt.type !== "AUTH_ERROR") {
-          return;
-        }
-        console.debug("DAS", evt.data.code);
-        if (evt.data.code === "auth/wrong-password") {
-          assign({ serverError: "Invalid username or password" });
-        }
-      },
+      updateEmail,
+      updatePassword,
+      updateError,
     },
     guards: {
+      isEmailEmpty,
       isEmailInvalid,
+      isPasswordEmpty,
     },
   }
 );

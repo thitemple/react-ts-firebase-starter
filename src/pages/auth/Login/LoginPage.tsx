@@ -3,11 +3,10 @@ import { useNavigate, Link } from "react-router-dom";
 import { Form, Icon, Button } from "react-bulma-components";
 import { useMachine } from "@xstate/react";
 
-// import { Providers } from "config/firebase";
+import loginPageMachine from "./state";
 import AuthContainer from "components/ui/AuthContainer";
 import ErrorText from "components/ui/ErrorText/ErrorText";
-import loginPageMachine from "./state";
-// import { SignInWithSocialMedia } from "../modules";
+import { Providers } from "config/firebase";
 
 export default function LoginPage(): ReactElement {
   const navigate = useNavigate();
@@ -18,7 +17,7 @@ export default function LoginPage(): ReactElement {
       },
     },
   });
-  const { email, password, serverError } = state.context;
+  const { email, password, error } = state.context;
 
   return (
     <AuthContainer header="Log in">
@@ -67,8 +66,8 @@ export default function LoginPage(): ReactElement {
             className="is-large"
             color="primary"
             type="submit"
-            disabled={state.matches("authenticating")}
-            onClick={() => send({ type: "FORM_SUBMITTED" })}
+            disabled={state.matches("submitting")}
+            onClick={() => send({ type: "SUBMIT" })}
           >
             Login
           </Button>
@@ -82,11 +81,16 @@ export default function LoginPage(): ReactElement {
           <Link to="/password-reset">Forgot your password?</Link>
         </p>
       </small>
-      <ErrorText error={serverError} />
+      <ErrorText error={error} />
       <hr />
-      {/* <Button
-        disabled={current.matches("authenticating")}
-        onClick={() => SignInWithSocialMedia(Providers.google)}
+      <Button
+        disabled={state.matches("signingInWithSocialMedia")}
+        onClick={() =>
+          send({
+            type: "SIGN_IN_WITH_SOCIAL_MEDIA",
+            provider: Providers.google,
+          })
+        }
         style={{
           backgroundColor: "#ea4335",
           borderColor: "#ea4335",
@@ -97,7 +101,7 @@ export default function LoginPage(): ReactElement {
           <i className="fab fa-google"></i>
         </Icon>
         <span>Sign in with Google</span>
-      </Button> */}
+      </Button>
     </AuthContainer>
   );
 }

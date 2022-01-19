@@ -1,39 +1,29 @@
-import {
-  // AuthProvider,
-  signInWithEmailAndPassword as performSignInWithEmailAndPassword,
-  UserCredential,
-} from "firebase/auth";
-// import { send } from "xstate";
+import { assign } from "xstate";
 
-import { auth } from "config/firebase";
-// import { SignInWithSocialMedia } from "../../modules";
-import { LoginPageContext } from "./machine";
-// import logging from "config/logging";
+import { LoginPageEvent, LoginPageContext } from "./types";
 
-export async function signInWithEmailAndPassword({
-  email,
-  password,
-}: LoginPageContext): Promise<UserCredential> {
-  return await performSignInWithEmailAndPassword(auth, email, password);
-  // .then((result) => {
-  //   logging.info(result);
-  //   navigate("/");
-  // })
-  // .catch(() => {
-  //   send({
-  //     type: "FAILED",
-  //     error: "Unable to sign in. Please try again later",
-  //   });
-  // });
+export function updateEmail(_ctx: LoginPageContext, evt: LoginPageEvent): void {
+  if (evt.type !== "EMAIL_CHANGED") {
+    return;
+  }
+  assign({ email: evt.email });
 }
 
-// export function signInWithSocialMedia(provider: AuthProvider): void {
-//   SignInWithSocialMedia(provider)
-//     .then((result) => {
-//       logging.info(result);
-//       navigate("/");
-//     })
-//     .catch((error: { message: string }) => {
-//       send({ type: "FAILED", error: error.message });
-//     });
-// }
+export function updatePassword(
+  _ctx: LoginPageContext,
+  evt: LoginPageEvent
+): void {
+  if (evt.type !== "PASSWORD_CHANGED") {
+    return;
+  }
+  assign({ password: evt.password });
+}
+
+export function updateError(_ctx: LoginPageContext, evt: LoginPageEvent): void {
+  if (evt.type !== "AUTH_ERROR") {
+    return;
+  }
+  if (evt.data.code === "auth/wrong-password") {
+    assign({ error: "Invalid username or password" });
+  }
+}
