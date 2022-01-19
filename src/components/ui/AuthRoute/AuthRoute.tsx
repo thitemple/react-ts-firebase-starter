@@ -14,7 +14,6 @@ export default function AuthRoute(props: AuthRouteProps): ReactElement | null {
 
   useEffect(() => {
     if (auth.currentUser === null) {
-      console.warn("DAS redirecting to login");
       navigate("/login");
     } else {
       setAuthenticated(true);

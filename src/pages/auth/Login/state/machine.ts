@@ -1,51 +1,110 @@
-import { createMachine } from "xstate";
+import { createMachine, assign } from "xstate";
+import { AuthError } from "firebase/auth";
+
+import { signInWithEmailAndPassword } from "./actions";
 
 type LoginPageEvent =
+  | { type: "AUTH_ERROR"; data: AuthError }
   | { type: "EMAIL_CHANGED"; email: string }
   | { type: "PASSWORD_CHANGED"; password: string }
-  | { type: "FAILED"; error: string }
-  | { type: "FORM_SUBMITTED" };
-
-type Field = "email" | "password";
+  | { type: "SUBMIT" };
 
 export type LoginPageContext = {
   email: string;
   password: string;
-  errors?: Array<[Field, string]>;
+  errors: string[];
+  serverError: string;
 };
 
 type LoginPageTypeState =
-  | { value: "loaded"; context: LoginPageContext & { errors: undefined } }
   | {
-      value: "authenticating";
-      context: LoginPageContext & { errors: undefined };
+      value: "editing";
+      context: LoginPageContext & { errors: [] };
     }
-  | { value: "failed"; context: LoginPageContext }
+  | { value: "failed"; context: LoginPageContext; error: string }
   | {
-      value: "authenticated";
-      context: LoginPageContext & { errors: undefined };
-    }
-  | { value: "invalid"; context: LoginPageContext };
+      value: "success";
+      context: LoginPageContext & { errors: []; serverError: "" };
+    };
+
+function isEmailInvalid(ctx: LoginPageContext): boolean {
+  return ctx.email.length > 0;
+}
 
 export default createMachine<
   LoginPageContext,
   LoginPageEvent,
   LoginPageTypeState
->({
-  id: "loginPage",
-  initial: "loaded",
-  context: { email: "", password: "", errors: [] },
-  states: {
-    loaded: {
-      on: {
-        FORM_SUBMITTED: {
-          target: "authenticating",
+>(
+  {
+    id: "loginPage",
+    initial: "editing",
+    context: { email: "", password: "", errors: [], serverError: "" },
+    states: {
+      editing: {
+        on: {
+          SUBMIT: [
+            {
+              target: "editing",
+              cond: isEmailInvalid.name,
+            },
+            {
+              target: "submitting",
+            },
+          ],
+          EMAIL_CHANGED: {
+            actions: assign({ email: (_, { email }) => email }),
+          },
+          PASSWORD_CHANGED: {
+            actions: assign({ password: (_, { password }) => password }),
+          },
+        },
+      },
+      submitting: {
+        invoke: {
+          src: signInWithEmailAndPassword.name,
+          onError: {
+            target: "failed",
+            actions: ["updateError"],
+          },
+          onDone: {
+            target: "authenticated",
+            actions: ["navigateToHome"],
+          },
+        },
+      },
+      success: {
+        type: "final",
+      },
+      failed: {
+        on: {
+          EMAIL_CHANGED: {
+            actions: assign({ email: (_, { email }) => email }),
+          },
+          PASSWORD_CHANGED: {
+            actions: assign({ password: (_, { password }) => password }),
+          },
         },
       },
     },
-    authenticating: {},
-    authenticated: {},
-    failed: {},
-    invalid: {},
   },
-});
+  {
+    services: {
+      signInWithEmailAndPassword,
+    },
+    actions: {
+      updateError: (_ctx, evt) => {
+        if (evt.type !== "AUTH_ERROR") {
+          return;
+        }
+        console.debug("DAS", evt.data.code);
+        if (evt.data.code === "auth/wrong-password") {
+          assign({ serverError: "Invalid username or password" });
+        }
+      },
+    },
+    guards: {
+      isEmailInvalid,
+    },
+  }
+);
