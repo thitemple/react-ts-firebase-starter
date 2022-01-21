@@ -1,7 +1,7 @@
 import { AuthError, AuthProvider } from "firebase/auth";
 
 export type LoginPageEvent =
-  | { type: "AUTH_ERROR"; data: AuthError }
+  | { type: "error.platform.signInWithEmailAndPassword"; data: AuthError }
   | { type: "EMAIL_CHANGED"; email: string }
   | { type: "PASSWORD_CHANGED"; password: string }
   | { type: "SIGN_IN_WITH_SOCIAL_MEDIA"; provider: AuthProvider }

@@ -1,9 +1,20 @@
 import { createMachine } from "xstate";
 
-import { LoginPageContext, LoginPageEvent, LoginPageTypeState } from "./types";
-import { updateEmail, updatePassword, updateError } from "./actions";
-import { signInWithEmailAndPassword, signInWithSocialMedia } from "./services";
-import { isEmailEmpty, isEmailInvalid, isPasswordEmpty } from "./guards";
+import {
+  LoginPageContext,
+  LoginPageEvent,
+  LoginPageTypeState,
+} from "./loginPageTypes";
+import { updateEmail, updatePassword, updateError } from "./loginPageActions";
+import {
+  signInWithEmailAndPassword,
+  signInWithSocialMedia,
+} from "./loginPageServices";
+import {
+  isEmailEmpty,
+  isEmailInvalid,
+  isPasswordEmpty,
+} from "./loginPageGuards";
 
 export default createMachine<
   LoginPageContext,
@@ -35,10 +46,10 @@ export default createMachine<
             },
           ],
           EMAIL_CHANGED: {
-            actions: updateEmail.name,
+            actions: ["updateEmail"],
           },
           PASSWORD_CHANGED: {
-            actions: updatePassword.name,
+            actions: ["updatePassword"],
           },
           SIGN_IN_WITH_SOCIAL_MEDIA: "signingInWithSocialMedia",
         },
@@ -76,7 +87,7 @@ export default createMachine<
           src: signInWithSocialMedia.name,
           onError: {
             target: "failed",
-            actions: updateError.name,
+            actions: ["updateError"],
           },
           onDone: {
             target: "success",
@@ -89,7 +100,7 @@ export default createMachine<
           src: signInWithEmailAndPassword.name,
           onError: {
             target: "failed",
-            actions: updateError.name,
+            actions: ["updateError"],
           },
           onDone: {
             target: "success",
@@ -103,10 +114,10 @@ export default createMachine<
       failed: {
         on: {
           EMAIL_CHANGED: {
-            actions: updateEmail.name,
+            actions: ["updateEmail"],
           },
           PASSWORD_CHANGED: {
-            actions: updatePassword.name,
+            actions: ["updatePassword"],
           },
         },
       },

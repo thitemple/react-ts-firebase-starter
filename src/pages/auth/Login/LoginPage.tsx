@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { Form, Icon, Button } from "react-bulma-components";
 import { useMachine } from "@xstate/react";
 
-import loginPageMachine from "./state";
+import { loginPageMachine } from "./state";
 import AuthContainer from "components/ui/AuthContainer";
 import ErrorText from "components/ui/ErrorText/ErrorText";
 import { Providers } from "config/firebase";
@@ -16,9 +16,9 @@ export default function LoginPage(): ReactElement {
         navigate("/");
       },
     },
+    devTools: true,
   });
   const { email, password, error } = state.context;
-
   return (
     <AuthContainer header="Log in">
       <Form.Field>
@@ -31,6 +31,10 @@ export default function LoginPage(): ReactElement {
             id="email"
             placeholder="Your e-mail"
             value={email}
+            color={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              state.matches("editing.email.error" as any) ? "danger" : ""
+            }
             onChange={(e) =>
               send({ type: "EMAIL_CHANGED", email: e.target.value })
             }
@@ -39,6 +43,18 @@ export default function LoginPage(): ReactElement {
             <i className="fas fa-envelope" />
           </Icon>
         </Form.Control>
+        {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          state.matches("editing.email.error.empty" as any) && (
+            <Form.Help color="danger">The e-mail must not be empty</Form.Help>
+          )
+        }
+        {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          state.matches("editing.email.error.invalid" as any) && (
+            <Form.Help color="danger">The e-mail is not valid</Form.Help>
+          )
+        }
       </Form.Field>
       <Form.Field>
         <Form.Label>Password</Form.Label>
@@ -51,6 +67,10 @@ export default function LoginPage(): ReactElement {
             id="password"
             placeholder="Your password"
             value={password}
+            color={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              state.matches("editing.password.error" as any) ? "danger" : ""
+            }
             onChange={(e) =>
               send({ type: "PASSWORD_CHANGED", password: e.target.value })
             }
@@ -59,6 +79,12 @@ export default function LoginPage(): ReactElement {
             <i className="fas fa-key" />
           </Icon>
         </Form.Control>
+        {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          state.matches("editing.password.error.empty" as any) && (
+            <Form.Help color="danger">The password must not be empty</Form.Help>
+          )
+        }
       </Form.Field>
       <Form.Field>
         <Form.Control>
@@ -81,7 +107,7 @@ export default function LoginPage(): ReactElement {
           <Link to="/password-reset">Forgot your password?</Link>
         </p>
       </small>
-      <ErrorText error={error} />
+      {state.matches("failed") && <ErrorText error={error} />}
       <hr />
       <Button
         disabled={state.matches("signingInWithSocialMedia")}
