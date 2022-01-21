@@ -4,17 +4,17 @@ import {
   LoginPageContext,
   LoginPageEvent,
   LoginPageTypeState,
-} from "./loginPageTypes";
-import { updateEmail, updatePassword, updateError } from "./loginPageActions";
+} from "./loginPage.types";
+import { updateEmail, updatePassword, updateError } from "./loginPage.actions";
 import {
   signInWithEmailAndPassword,
   signInWithSocialMedia,
-} from "./loginPageServices";
+} from "./loginPage.services";
 import {
   isEmailEmpty,
   isEmailInvalid,
   isPasswordEmpty,
-} from "./loginPageGuards";
+} from "./loginPage.guards";
 
 export default createMachine<
   LoginPageContext,
@@ -62,8 +62,22 @@ export default createMachine<
               error: {
                 initial: "empty",
                 states: {
-                  empty: {},
-                  invalid: {},
+                  empty: {
+                    on: {
+                      EMAIL_CHANGED: {
+                        target: "#loginPage.editing",
+                        actions: ["updateEmail"],
+                      },
+                    },
+                  },
+                  invalid: {
+                    on: {
+                      EMAIL_CHANGED: {
+                        target: "#loginPage.editing",
+                        actions: ["updateEmail"],
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -75,7 +89,14 @@ export default createMachine<
               error: {
                 initial: "empty",
                 states: {
-                  empty: {},
+                  empty: {
+                    on: {
+                      PASSWORD_CHANGED: {
+                        target: "#loginPage.editing",
+                        actions: ["updatePassword"],
+                      },
+                    },
+                  },
                 },
               },
             },
@@ -85,38 +106,30 @@ export default createMachine<
       signingInWithSocialMedia: {
         invoke: {
           src: signInWithSocialMedia.name,
-          onError: {
-            target: "failed",
-            actions: ["updateError"],
-          },
-          onDone: {
-            target: "success",
-            actions: ["navigateToHome"],
-          },
+          onError: "failed",
+          onDone: "success",
         },
       },
       submitting: {
         invoke: {
           src: signInWithEmailAndPassword.name,
-          onError: {
-            target: "failed",
-            actions: ["updateError"],
-          },
-          onDone: {
-            target: "success",
-            actions: ["navigateToHome"],
-          },
+          onError: "failed",
+          onDone: "success",
         },
       },
       success: {
         type: "final",
+        entry: ["navigateToHome"],
       },
       failed: {
+        entry: ["updateError"],
         on: {
           EMAIL_CHANGED: {
+            target: "editing",
             actions: ["updateEmail"],
           },
           PASSWORD_CHANGED: {
+            target: "editing",
             actions: ["updatePassword"],
           },
         },
@@ -124,10 +137,6 @@ export default createMachine<
     },
   },
   {
-    services: {
-      signInWithEmailAndPassword,
-      signInWithSocialMedia,
-    },
     actions: {
       updateEmail,
       updatePassword,
@@ -137,6 +146,10 @@ export default createMachine<
       isEmailEmpty,
       isEmailInvalid,
       isPasswordEmpty,
+    },
+    services: {
+      signInWithEmailAndPassword,
+      signInWithSocialMedia,
     },
   }
 );

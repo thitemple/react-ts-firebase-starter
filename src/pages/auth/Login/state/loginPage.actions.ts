@@ -1,6 +1,6 @@
 import { assign } from "xstate";
 
-import { LoginPageEvent, LoginPageContext } from "./loginPageTypes";
+import { LoginPageEvent, LoginPageContext } from "./loginPage.types";
 
 export const updateEmail = assign(
   (_ctx: LoginPageContext, evt: LoginPageEvent): { email?: string } => {

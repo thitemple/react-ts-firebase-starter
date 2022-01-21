@@ -1,4 +1,4 @@
-import { LoginPageContext } from "./loginPageTypes";
+import { LoginPageContext } from "./loginPage.types";
 
 export function isEmailEmpty(ctx: LoginPageContext): boolean {
   return ctx.email.trim().length === 0;

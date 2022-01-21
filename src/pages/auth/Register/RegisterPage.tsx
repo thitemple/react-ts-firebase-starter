@@ -1,49 +1,23 @@
-import React, { ReactElement, useState } from "react";
+import React, { ReactElement } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { Form, Icon, Button } from "react-bulma-components";
+import { useMachine } from "@xstate/react";
 
-import { auth } from "config/firebase";
-import logging from "config/logging";
 import AuthContainer from "components/ui/AuthContainer";
 import ErrorText from "components/ui/ErrorText/ErrorText";
+import { registerPageMachine } from "./state";
 
 export default function RegisterPage(): ReactElement {
-  const [registering, setRegistering] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
-
-  const signUpWithEmailAndPassword = (): void => {
-    if (password !== confirm) {
-      setError("Please make sure your passwords match.");
-    }
-    if (error !== "") {
-      setError("");
-    }
-
-    setRegistering(true);
-
-    createUserWithEmailAndPassword(auth, email, password)
-      .then((result) => {
-        logging.info(result);
+  const [state, send] = useMachine(registerPageMachine, {
+    actions: {
+      navigateToHome: () => {
         navigate("/");
-      })
-      .catch((error: { code: string }) => {
-        logging.error(error);
-
-        if (error.code.includes("auth/weak-password")) {
-          setError("Please enter a stronger password.");
-        } else if (error.code.includes("auth/email-already-in-use")) {
-          setError("E-mail already in use.");
-        } else {
-          setError("Unable to register. Please try again later.");
-        }
-        setRegistering(false);
-      });
-  };
+      },
+    },
+    devTools: true,
+  });
+  const { email, password, confirmation, error } = state.context;
 
   return (
     <AuthContainer header="Register">
@@ -57,12 +31,22 @@ export default function RegisterPage(): ReactElement {
             id="email"
             placeholder="Your e-mail"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            color={state.matches("editing.email.error" as any) ? "danger" : ""}
+            onChange={(e) =>
+              send({ type: "EMAIL_CHANGED", email: e.target.value })
+            }
           />
           <Icon align="left" size="small">
             <i className="fas fa-envelope" />
           </Icon>
         </Form.Control>
+        {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          state.matches("editing.email.error" as any) && (
+            <Form.Help color="danger">The e-mail is not valid</Form.Help>
+          )
+        }
       </Form.Field>
       <Form.Field>
         <Form.Label>Password</Form.Label>
@@ -75,12 +59,24 @@ export default function RegisterPage(): ReactElement {
             id="password"
             placeholder="Your password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            color={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              state.matches("editing.password.error" as any) ? "danger" : ""
+            }
+            onChange={(e) =>
+              send({ type: "PASSWORD_CHANGED", password: e.target.value })
+            }
           />
           <Icon align="left" size="small">
             <i className="fas fa-key" />
           </Icon>
         </Form.Control>
+        {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          state.matches("editing.password.error" as any) && (
+            <Form.Help color="danger">The password is not valid</Form.Help>
+          )
+        }
       </Form.Field>
       <Form.Field>
         <Form.Label>Confirm your password</Form.Label>
@@ -92,21 +88,36 @@ export default function RegisterPage(): ReactElement {
             name="confirm"
             id="confirm"
             placeholder="Confirm password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
+            value={confirmation}
+            color={
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              state.matches("editing.confirmation.error" as any) ? "danger" : ""
+            }
+            onChange={(e) =>
+              send({
+                type: "CONFIRMATION_CHANGED",
+                confirmation: e.target.value,
+              })
+            }
           />
           <Icon align="left" size="small">
             <i className="fas fa-key" />
           </Icon>
         </Form.Control>
+        {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          state.matches("editing.confirmation.error" as any) && (
+            <Form.Help color="danger">The passwords don't match</Form.Help>
+          )
+        }
       </Form.Field>
       <Form.Field kind="group">
         <Form.Control>
           <Button
             className="is-large"
             color="primary"
-            disabled={registering}
-            onClick={() => signUpWithEmailAndPassword()}
+            disabled={state.matches("submitting")}
+            onClick={() => send({ type: "SUBMIT" })}
           >
             Sign Up
           </Button>
@@ -117,7 +128,7 @@ export default function RegisterPage(): ReactElement {
           </Button>
         </Form.Control>
       </Form.Field>
-      <ErrorText error={error} />
+      {state.matches("failed") && <ErrorText error={error} />}
     </AuthContainer>
   );
 }

@@ -1,1 +1,1 @@
-export { default as loginPageMachine } from "./loginPageMachine";
+export { default as loginPageMachine } from "./loginPage.machine";

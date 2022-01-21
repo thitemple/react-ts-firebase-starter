@@ -5,7 +5,7 @@ import {
 
 import { SignInWithSocialMedia } from "../../modules";
 import { auth } from "config/firebase";
-import { LoginPageContext, LoginPageEvent } from "./loginPageTypes";
+import { LoginPageContext, LoginPageEvent } from "./loginPage.types";
 
 export async function signInWithEmailAndPassword({
   email,
